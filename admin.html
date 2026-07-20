@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script>
+(function(){var errs=[];
+window.addEventListener('error',function(e){
+  if(e&&e.target&&(e.target.src||e.target.href)){errs.push('FALHOU CARREGAR: '+(e.target.src||e.target.href));}
+  else if(e&&e.message){errs.push(e.message+' @ '+String(e.filename||'').split('/').pop()+':'+(e.lineno||''));}
+},true);
+window.addEventListener('load',function(){setTimeout(function(){
+  var raw=document.body&&document.body.textContent.indexOf('{{')>-1;
+  var probs=[];
+  if(!window.React)probs.push('React NAO carregou');
+  if(typeof window.RVDADOS==='undefined')probs.push('dados-global.js NAO carregou');
+  if(typeof window.RVAPI==='undefined')probs.push('dados-api.js NAO carregou');
+  if(raw||probs.length||errs.length){
+    var d=document.createElement('div');
+    d.style.cssText='position:fixed;left:10px;bottom:10px;right:10px;max-height:45vh;overflow:auto;z-index:2147483647;background:#7f1d1d;color:#fff;font:12px/1.6 monospace;padding:14px;border-radius:10px;white-space:pre-wrap';
+    d.textContent='DIAGNOSTICO RYAN VEICULOS — tire um PRINT desta caixa e envie\n'
+      +'URL: '+location.href+'\n'
+      +'Navegador: '+navigator.userAgent+'\n'
+      +'React: '+(window.React?('OK '+window.React.version):'FALHOU')+'\n'
+      +'RVDADOS: '+(typeof window.RVDADOS)+' | RVAPI: '+(typeof window.RVAPI)+'\n'
+      +'Pagina renderizou: '+(raw?'NAO (template cru)':'SIM')+'\n'
+      +'Problemas: '+(probs.join(' | ')||'(nenhum)')+'\n'
+      +'Erros:\n'+(errs.join('\n')||'(nenhum)');
+    document.body.appendChild(d);
+  }
+},4000);});})();
+</script>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script>window.__resources={"https://unpkg.com/react@18.3.1/umd/react.production.min.js":"vendor/react.js","https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js":"vendor/react-dom.js"};</script>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<title>Painel | Ryan Veículos</title>
+<script src="dados-global.js"></script>
+<script src="dados-api.js"></script>
+<style>
+body{margin:0;font-family:'Archivo',system-ui,sans-serif;background:#F0F2F5;color:#171B22;-webkit-font-smoothing:antialiased}
+a{color:#1560F0;text-decoration:none}a:hover{color:#0B3EAB}
+input,select,textarea,button{font-family:'Archivo',system-ui,sans-serif}
+@keyframes rvFade{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+</style>
+</helmet>
+
+<!-- LOGIN -->
+<sc-if value="{{semSessao}}" hint-placeholder-val="{{ false }}">
+<div style="min-height:100vh;display:flex;align-items:center;justify-content:center;background:#141922;padding:20px">
+  <form onSubmit="{{fazerLogin}}" style="background:#fff;border-radius:18px;padding:34px;max-width:400px;width:100%;display:flex;flex-direction:column;gap:12px;animation:rvFade .4s ease both">
+    <span style="display:block;width:120px;height:54px;overflow:hidden;border-radius:8px;margin:0 auto 8px"><img src="uploads/logo-1784303311423.png" alt="Ryan Veículos" style="width:120px;height:120px;object-fit:cover;margin-top:-33px;display:block"></span>
+    <h1 style="margin:0;font-size:20px;font-weight:800;text-align:center">Painel administrativo</h1>
+    <p style="margin:0 0 8px;font-size:13.5px;color:#5B6472;text-align:center">Acesso restrito à equipe da loja.</p>
+    <input required name="email" type="email" placeholder="E-mail" style="padding:13px 14px;border:1px solid #D9DEE6;border-radius:10px;font-size:14.5px">
+    <input required name="senha" type="password" placeholder="Senha" style="padding:13px 14px;border:1px solid #D9DEE6;border-radius:10px;font-size:14.5px">
+    <sc-if value="{{erroLogin}}" hint-placeholder-val="{{ false }}">
+      <p style="margin:0;font-size:13px;color:#B3261E;font-weight:600;background:#FCECEB;border-radius:8px;padding:10px 12px">E-mail ou senha incorretos.</p></sc-if>
+    <button type="submit" style="background:#1560F0;color:#fff;border:none;font-size:15px;font-weight:700;padding:14px;border-radius:10px;cursor:pointer" style-hover="background:#0E4FC7">Entrar</button>
+    <a onClick="{{recuperarSenha}}" style="text-align:center;font-size:13px;font-weight:600;color:#5B6472;cursor:pointer;padding:4px" style-hover="color:#1560F0">Esqueci minha senha</a>
+    <p style="margin:4px 0 0;font-size:11.5px;color:#8A94A4;text-align:center;font-family:ui-monospace,monospace">sem backend: admin123 · com backend: senha das variáveis da Vercel</p>
+  </form>
+</div>
+</sc-if>
+
+<!-- PAINEL -->
+<sc-if value="{{comSessao}}" hint-placeholder-val="{{ true }}">
+<div style="display:flex;min-height:100vh;flex-wrap:wrap">
+  <!-- SIDEBAR -->
+  <aside style="background:#141922;color:#C9D2DE;flex:0 0 220px;min-width:220px;display:flex;flex-direction:column;padding:18px 12px">
+    <span style="display:block;width:104px;height:46px;overflow:hidden;border-radius:6px;margin:4px 8px 22px"><img src="uploads/logo-1784303311423.png" alt="Ryan Veículos" style="width:104px;height:104px;object-fit:cover;margin-top:-29px;display:block"></span>
+    <nav style="display:flex;flex-direction:column;gap:3px">
+      <a onClick="{{goDash}}" style="padding:12px 14px;border-radius:9px;font-size:14px;font-weight:600;cursor:pointer;color:{{navDashCor}};background:{{navDashBg}}" style-hover="color:#fff">Dashboard</a>
+      <a onClick="{{goEstoque}}" style="padding:12px 14px;border-radius:9px;font-size:14px;font-weight:600;cursor:pointer;color:{{navEstCor}};background:{{navEstBg}}" style-hover="color:#fff">Estoque</a>
+      <a onClick="{{goNovo}}" style="padding:12px 14px;border-radius:9px;font-size:14px;font-weight:600;cursor:pointer;color:{{navFormCor}};background:{{navFormBg}}" style-hover="color:#fff">Cadastrar veículo</a>
+      <a onClick="{{goContatos}}" style="padding:12px 14px;border-radius:9px;font-size:14px;font-weight:600;cursor:pointer;color:{{navConCor}};background:{{navConBg}}" style-hover="color:#fff">Contatos <sc-if value="{{temNovos}}" hint-placeholder-val="{{ false }}"><span style="background:#1560F0;color:#fff;font-size:11px;font-weight:800;border-radius:10px;padding:2px 8px;margin-left:6px">{{nNovos}}</span></sc-if></a>
+      <a onClick="{{goConfig}}" style="padding:12px 14px;border-radius:9px;font-size:14px;font-weight:600;cursor:pointer;color:{{navCfgCor}};background:{{navCfgBg}}" style-hover="color:#fff">Configurações</a>
+    </nav>
+    <div style="margin-top:auto;display:flex;flex-direction:column;gap:3px">
+      <a href="index.html" style="padding:12px 14px;border-radius:9px;font-size:13.5px;font-weight:600;color:#8A94A4" style-hover="color:#fff">↗ Ver o site</a>
+      <a onClick="{{sair}}" style="padding:12px 14px;border-radius:9px;font-size:13.5px;font-weight:600;color:#8A94A4;cursor:pointer" style-hover="color:#fff">Sair</a>
+    </div>
+  </aside>
+
+  <main style="flex:1;min-width:300px;padding:28px;max-width:1100px">
+    <sc-if value="{{aviso}}" hint-placeholder-val="{{ false }}">
+      <div style="background:#E7F6EC;border:1px solid #BFE5CC;color:#176B36;font-size:14px;font-weight:600;border-radius:10px;padding:12px 16px;margin-bottom:18px;animation:rvFade .3s ease both">{{aviso}}</div></sc-if>
+
+    <!-- DASHBOARD -->
+    <sc-if value="{{ehDash}}" hint-placeholder-val="{{ true }}">
+      <h1 style="margin:0 0 20px;font-size:26px;font-weight:800;letter-spacing:-0.6px">Dashboard</h1>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px;margin-bottom:26px">
+        <sc-for list="{{stats}}" as="s" hint-placeholder-count="6">
+          <div style="background:#fff;border:1px solid #E4E8EE;border-radius:14px;padding:18px">
+            <div style="font-size:28px;font-weight:900;letter-spacing:-1px;color:{{s.cor}}">{{s.n}}</div>
+            <div style="font-size:12.5px;font-weight:600;color:#5B6472;margin-top:2px">{{s.t}}</div>
+          </div></sc-for>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:18px">
+        <div style="background:#fff;border:1px solid #E4E8EE;border-radius:14px;padding:20px">
+          <h2 style="margin:0 0 14px;font-size:15px;font-weight:800">Mais visualizados</h2>
+          <sc-for list="{{maisVistos}}" as="v" hint-placeholder-count="3">
+            <div style="display:flex;justify-content:space-between;gap:10px;padding:9px 0;border-bottom:1px solid #F1F4F8;font-size:14px">
+              <span style="font-weight:600">{{v.nome}}</span><span style="color:#5B6472;flex:none">{{v.views}} views</span></div></sc-for>
+        </div>
+        <div style="background:#fff;border:1px solid #E4E8EE;border-radius:14px;padding:20px">
+          <h2 style="margin:0 0 14px;font-size:15px;font-weight:800">Últimos contatos</h2>
+          <sc-if value="{{semContatos}}" hint-placeholder-val="{{ false }}"><p style="margin:0;font-size:13.5px;color:#8A94A4">Nenhum contato recebido ainda.</p></sc-if>
+          <sc-for list="{{ultimosContatos}}" as="c" hint-placeholder-count="3">
+            <div style="display:flex;justify-content:space-between;gap:10px;padding:9px 0;border-bottom:1px solid #F1F4F8;font-size:14px">
+              <span style="font-weight:600">{{c.nome}} <span style="color:#8A94A4;font-weight:500">— {{c.origem}}</span></span><span style="color:#5B6472;flex:none">{{c.dataStr}}</span></div></sc-for>
+        </div>
+      </div>
+    </sc-if>
+
+    <!-- ESTOQUE -->
+    <sc-if value="{{ehEstoque}}" hint-placeholder-val="{{ false }}">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;margin-bottom:18px">
+        <h1 style="margin:0;font-size:26px;font-weight:800;letter-spacing:-0.6px">Estoque</h1>
+        <a onClick="{{goNovo}}" style="background:#1560F0;color:#fff;font-size:14px;font-weight:700;padding:12px 20px;border-radius:10px;cursor:pointer" style-hover="background:#0E4FC7;color:#fff">+ Cadastrar veículo</a>
+      </div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px">
+        <input value="{{qBusca}}" onChange="{{setQBusca}}" placeholder="Pesquisar…" style="flex:2;min-width:160px;padding:11px 14px;border:1px solid #D9DEE6;border-radius:10px;font-size:14px;background:#fff">
+        <select value="{{qStatus}}" onChange="{{setQStatus}}" style="flex:1;min-width:130px;padding:11px 10px;border:1px solid #D9DEE6;border-radius:10px;font-size:13.5px;background:#fff">
+          <option value="">Status: todos</option><option value="disponivel">Disponível</option><option value="reservado">Reservado</option><option value="vendido">Vendido</option><option value="oculto">Oculto</option></select>
+        <select value="{{qOrdem}}" onChange="{{setQOrdem}}" style="flex:1;min-width:150px;padding:11px 10px;border:1px solid #D9DEE6;border-radius:10px;font-size:13.5px;background:#fff">
+          <option value="data">Mais recentes</option><option value="precoAsc">Menor preço</option><option value="precoDesc">Maior preço</option><option value="ano">Ano mais novo</option><option value="views">Mais visualizados</option></select>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <sc-for list="{{listaAdm}}" as="v" hint-placeholder-count="5">
+          <div style="background:#fff;border:1px solid #E4E8EE;border-radius:14px;padding:12px 14px;display:flex;gap:14px;align-items:center;flex-wrap:wrap">
+            <div style="flex:none;width:92px;height:60px;border-radius:9px;overflow:hidden;background:repeating-linear-gradient(135deg,#E9EDF2 0 10px,#E1E6EC 10px 20px)">
+              <sc-if value="{{v.temFoto}}" hint-placeholder-val="{{ false }}">{{v.capaImg}}</sc-if>
+            </div>
+            <div style="flex:1;min-width:150px">
+              <div style="font-size:15px;font-weight:800">{{v.nome}}</div>
+              <div style="font-size:12.5px;color:#5B6472;margin-top:2px">{{v.sub}} · {{v.views}} views</div>
+            </div>
+            <div style="font-size:15px;font-weight:800;flex:none">{{v.precoStr}}</div>
+            <select value="{{v.status}}" onChange="{{v.mudarStatus}}" style="flex:none;padding:9px 8px;border:1.5px solid {{v.statusCor}};color:{{v.statusCor}};font-weight:700;border-radius:9px;font-size:12.5px;background:#fff">
+              <option value="disponivel">Disponível</option><option value="reservado">Reservado</option><option value="vendido">Vendido</option><option value="oculto">Oculto</option></select>
+            <div style="display:flex;gap:6px;flex:none">
+              <a onClick="{{v.editar}}" title="Editar" style="border:1px solid #D9DEE6;border-radius:8px;padding:9px 12px;font-size:12.5px;font-weight:700;cursor:pointer;color:#39414D" style-hover="border-color:#1560F0;color:#1560F0">Editar</a>
+              <a onClick="{{v.duplicar}}" title="Duplicar" style="border:1px solid #D9DEE6;border-radius:8px;padding:9px 12px;font-size:12.5px;font-weight:700;cursor:pointer;color:#39414D" style-hover="border-color:#1560F0;color:#1560F0">Duplicar</a>
+              <a href="{{v.verHref}}" title="Ver no site" style="border:1px solid #D9DEE6;border-radius:8px;padding:9px 12px;font-size:12.5px;font-weight:700;cursor:pointer;color:#39414D" style-hover="border-color:#1560F0;color:#1560F0">Ver</a>
+              <a onClick="{{v.excluir}}" title="Excluir" style="border:1px solid #F3C9C6;border-radius:8px;padding:9px 12px;font-size:12.5px;font-weight:700;cursor:pointer;color:#B3261E" style-hover="background:#FCECEB;color:#B3261E">Excluir</a>
+            </div>
+          </div></sc-for>
+      </div>
+    </sc-if>
+
+    <!-- FORMULÁRIO DE VEÍCULO -->
+    <sc-if value="{{ehForm}}" hint-placeholder-val="{{ false }}">
+      <h1 style="margin:0 0 6px;font-size:26px;font-weight:800;letter-spacing:-0.6px">{{tituloForm}}</h1>
+      <p style="margin:0 0 20px;font-size:14px;color:#5B6472">Campos com * são obrigatórios. O anúncio só é publicado com todos preenchidos.</p>
+      <form onSubmit="{{salvarVeiculo}}" style="display:flex;flex-direction:column;gap:22px">
+        <div style="background:#fff;border:1px solid #E4E8EE;border-radius:16px;padding:24px">
+          <h2 style="margin:0 0 16px;font-size:16px;font-weight:800">Dados do veículo</h2>
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px">
+            <label style="font-size:12px;font-weight:700;color:#5B6472;display:flex;flex-direction:column;gap:5px">MARCA *<input required name="marca" defaultValue="{{fv.marca}}" style="padding:11px 12px;border:1px solid #D9DEE6;border-radius:9px;font-size:14px;font-weight:500;color:#171B22"></label>
+            <label style="font-size:12px;font-weight:700;color:#5B6472;display:flex;flex-direction:column;gap:5px">MODELO *<input required name="modelo" defaultValue="{{fv.modelo}}" style="padding:11px 12px;border:1px solid #D9DEE6;border-radius:9px;font-size:14px;font-weight:500;color:#171B22"></label>
+            <label style="font-size:12px;font-weight:700;color:#5B6472;display:flex;flex-direction:column;gap:5px">VERSÃO *<input required name="versao" defaultValue="{{fv.versao}}" style="padding:11px 12px;border:1px solid #D9DEE6;border-radius:9px;font-size:14px;font-weight:500;color:#171B22"></label>
+            <label style="font-size:12px;font-weight:700;color:#5B6472;display:flex;flex-direction:column;gap:5px">ANO FABRICAÇÃO *<input required name="anoFab" type="number" min="1980" max="2027" defaultValue="{{fv.anoFab}}" style="padding:11px 12px;border:1px solid #D9DEE6;border-radius:9px;font-size:14px;font-weight:500;color:#171B22"></label>
+            <label style="font-size:12px;font-weight:700;color:#5B6472;display:flex;flex-direction:column;gap:5px">ANO MODELO *<input required name="anoMod" type="number" min="1980" max="2027" defaultValue="{{fv.anoMod}}" style="padding:11px 12px;border:1px solid #D9DEE6;border-radius:9px;font-size:14px;font-weight:500;color:#171B22"></label>
+            <label style="font-size:12px;font-weight:700;color:#5B6472;display:flex;flex-direction:column;gap:5px">PREÇO (R$) *<input required name="preco" type="number" min="0" defaultValue="{{fv.preco}}" style="padding:11px 12px;border:1px solid #D9DEE6;border-radius:9px;font-size:14px;font-weight:500;color:#171B22"></label>
+            <label style="font-size:12px;font-weight:700;color:#5B6472;display:flex;flex-direction:column;gap:5px">QUILOMETRAGEM *<input required name="km" type="number" min="0" defaultValue="{{fv.km}}" style="padding:11px 12px;border:1px solid #D9DEE6;border-radius:9px;font-size:14px;font-weight:500;color:#171B22"></label>
+            <label style="font-size:12px;font-weight:700;color:#5B6472;display:flex;flex-direction:column;gap:5px">COR *<input required name="cor" defaultValue="{{fv.cor}}" style="padding:11px 12px;border:1px solid #D9DEE6;border-radius:9px;font-size:14px;font-weight:500;color:#171B22"></label>
+            <label style="font-size:12px;font-weight:700;color:#5B6472;display:flex;flex-direction:column;gap:5px">COMBUSTÍVEL *<select name="combustivel" defaultValue="{{fv.combustivel}}" style="padding:11px 10px;border:1px solid #D9DEE6;border-radius:9px;font-size:14px;background:#fff"><option>Flex</option><option>Gasolina</option><option>Diesel</option><option>Híbrido</option><option>Elétrico</option></select></label>
+            <label style="font-size:12px;font-weight:700;color:#5B6472;display:flex;flex-direction:column;gap:5px">CÂMBIO *<select name="cambio" defaultValue="{{fv.cambio}}" style="padding:11px 10px;border:1px solid #D9DEE6;border-radius:9px;font-size:14px;background:#fff"><option>Automático</option><option>Automático CVT</option><option>Manual</option></select></label>
+            <label style="font-size:12px;font-weight:700;color:#5B6472;display:flex;flex-direction:column;gap:5px">MOTORIZAÇÃO<input name="motor" defaultValue="{{fv.motor}}" style="padding:11px 12px;border:1px solid #D9DEE6;border-radius:9px;font-size:14px;font-weight:500;color:#171B22"></label>
+            <label style="font-size:12px;font-weight:700;color:#5B6472;display:flex;flex-direction:column;gap:5px">PORTAS<input name="portas" type="number" min="2" max="5" defaultValue="{{fv.portas}}" style="padding:11px 12px;border:1px solid #D9DEE6;border-radius:9px;font-size:14px;font-weight:500;color:#171B22"></label>
+            <label style="font-size:12px;font-weight:700;color:#5B6472;display:flex;flex-direction:column;gap:5px">FINAL DA PLACA<input name="placaFinal" maxLength="1" defaultValue="{{fv.placaFinal}}" style="padding:11px 12px;border:1px solid #D9DEE6;border-radius:9px;font-size:14px;font-weight:500;color:#171B22"></label>
+            <label style="font-size:12px;font-weight:700;color:#5B6472;display:flex;flex-direction:column;gap:5px">CARROCERIA<select name="carroceria" defaultValue="{{fv.carroceria}}" style="padding:11px 10px;border:1px solid #D9DEE6;border-radius:9px;font-size:14px;background:#fff"><option>Hatch</option><option>Sedã</option><option>SUV</option><option>Picape</option><option>Minivan</option><option>Coupé</option></select></label>
+            <label style="font-size:12px;font-weight:700;color:#5B6472;display:flex;flex-direction:column;gap:5px">CATEGORIA<input name="categoria" defaultValue="{{fv.categoria}}" style="padding:11px 12px;border:1px solid #D9DEE6;border-radius:9px;font-size:14px;font-weight:500;color:#171B22"></label>
+            <label style="font-size:12px;font-weight:700;color:#5B6472;display:flex;flex-direction:column;gap:5px">ENTRADA SUGERIDA (R$)<input name="entradaSugerida" type="number" min="0" defaultValue="{{fv.entradaSugerida}}" style="padding:11px 12px;border:1px solid #D9DEE6;border-radius:9px;font-size:14px;font-weight:500;color:#171B22"></label>
+            <label style="font-size:12px;font-weight:700;color:#5B6472;display:flex;flex-direction:column;gap:5px">STATUS *<select name="status" defaultValue="{{fv.status}}" style="padding:11px 10px;border:1px solid #D9DEE6;border-radius:9px;font-size:14px;background:#fff"><option value="disponivel">Disponível</option><option value="reservado">Reservado</option><option value="vendido">Vendido</option><option value="oculto">Oculto</option></select></label>
+          </div>
+          <label style="font-size:12px;font-weight:700;color:#5B6472;display:flex;flex-direction:column;gap:5px;margin-top:12px">DESCRIÇÃO *<textarea required name="descricao" rows="3" defaultValue="{{fv.descricao}}" style="padding:11px 12px;border:1px solid #D9DEE6;border-radius:9px;font-size:14px;font-weight:500;color:#171B22;resize:vertical"></textarea></label>
+          <label style="font-size:12px;font-weight:700;color:#5B6472;display:flex;flex-direction:column;gap:5px;margin-top:12px">OPCIONAIS (um por linha)<textarea name="opcionais" rows="3" defaultValue="{{fv.opcionaisTxt}}" style="padding:11px 12px;border:1px solid #D9DEE6;border-radius:9px;font-size:14px;font-weight:500;color:#171B22;resize:vertical"></textarea></label>
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px;margin-top:12px">
+            <label style="font-size:12px;font-weight:700;color:#5B6472;display:flex;flex-direction:column;gap:5px">GARANTIA<input name="garantia" defaultValue="{{fv.garantia}}" style="padding:11px 12px;border:1px solid #D9DEE6;border-radius:9px;font-size:14px;font-weight:500;color:#171B22"></label>
+            <label style="font-size:12px;font-weight:700;color:#5B6472;display:flex;flex-direction:column;gap:5px">DOCUMENTAÇÃO<input name="documentacao" defaultValue="{{fv.documentacao}}" style="padding:11px 12px;border:1px solid #D9DEE6;border-radius:9px;font-size:14px;font-weight:500;color:#171B22"></label>
+          </div>
+          <div style="display:flex;gap:22px;flex-wrap:wrap;margin-top:16px">
+            <label style="display:flex;align-items:center;gap:8px;font-size:13.5px;font-weight:600;cursor:pointer"><input type="checkbox" name="leilao" defaultChecked="{{fv.leilao}}" style="width:18px;height:18px;accent-color:#1560F0">Passagem por leilão</label>
+            <label style="display:flex;align-items:center;gap:8px;font-size:13.5px;font-weight:600;cursor:pointer"><input type="checkbox" name="sinistro" defaultChecked="{{fv.sinistro}}" style="width:18px;height:18px;accent-color:#1560F0">Registro de sinistro</label>
+            <label style="display:flex;align-items:center;gap:8px;font-size:13.5px;font-weight:600;cursor:pointer"><input type="checkbox" name="aceitaTroca" defaultChecked="{{fv.aceitaTroca}}" style="width:18px;height:18px;accent-color:#1560F0">Aceita troca</label>
+            <label style="display:flex;align-items:center;gap:8px;font-size:13.5px;font-weight:600;cursor:pointer"><input type="checkbox" name="financia" defaultChecked="{{fv.financia}}" style="width:18px;height:18px;accent-color:#1560F0">Permite financiamento</label>
+          </div>
+        </div>
+
+        <!-- FOTOS -->
+        <div style="background:#fff;border:1px solid #E4E8EE;border-radius:16px;padding:24px">
+          <h2 style="margin:0 0 6px;font-size:16px;font-weight:800">Fotos</h2>
+          <p style="margin:0 0 14px;font-size:13px;color:#5B6472">JPG, PNG ou WebP. Compressão automática. Arraste para reordenar; a primeira em destaque é a capa.</p>
+          <label style="display:inline-flex;align-items:center;gap:8px;border:1.5px dashed #A9B4C2;border-radius:10px;padding:14px 20px;font-size:14px;font-weight:700;color:#39414D;cursor:pointer" style-hover="border-color:#1560F0;color:#1560F0">
+            + Adicionar fotos<input type="file" accept="image/jpeg,image/jpg,image/png,image/webp" multiple onChange="{{uploadFotos}}" style="display:none"></label>
+          <sc-if value="{{enviando}}" hint-placeholder-val="{{ false }}">
+            <div style="margin-top:14px">
+              <div style="height:8px;background:#E9EDF2;border-radius:6px;overflow:hidden"><div style="height:100%;background:#1560F0;border-radius:6px;width:{{progresso}}%;transition:width .2s"></div></div>
+              <p style="margin:6px 0 0;font-size:12.5px;color:#5B6472;font-weight:600">Enviando… {{progresso}}%</p>
+            </div></sc-if>
+          <sc-if value="{{uploadOk}}" hint-placeholder-val="{{ false }}">
+            <p style="margin:12px 0 0;font-size:13px;color:#176B36;font-weight:700">✓ Upload concluído</p></sc-if>
+          <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:16px">
+            <sc-for list="{{fotosForm}}" as="f" hint-placeholder-count="0">
+              <div draggable="true" onDragStart="{{f.dragStart}}" onDragOver="{{f.dragOver}}" onDrop="{{f.drop}}" style="width:150px;border:2px solid {{f.borda}};border-radius:12px;overflow:hidden;background:#F5F6F8;cursor:grab">
+                {{f.img}}
+                <div style="padding:8px;display:flex;flex-direction:column;gap:5px">
+                  <sc-if value="{{f.ehCapa}}" hint-placeholder-val="{{ false }}"><span style="font-size:11px;font-weight:800;color:#1560F0;text-transform:uppercase;letter-spacing:.5px">★ Capa</span></sc-if>
+                  <sc-if value="{{f.naoCapa}}" hint-placeholder-val="{{ false }}"><a onClick="{{f.definirCapa}}" style="font-size:11.5px;font-weight:700;cursor:pointer">Definir capa</a></sc-if>
+                  <div style="display:flex;gap:8px">
+                    <label style="font-size:11.5px;font-weight:700;color:#39414D;cursor:pointer" style-hover="color:#1560F0">Trocar<input type="file" accept="image/*" onChange="{{f.trocar}}" style="display:none"></label>
+                    <a onClick="{{f.excluir}}" style="font-size:11.5px;font-weight:700;color:#B3261E;cursor:pointer">Excluir</a>
+                  </div>
+                </div>
+              </div></sc-for>
+          </div>
+          <sc-if value="{{temFotosForm}}" hint-placeholder-val="{{ false }}">
+            <div style="margin-top:20px;border-top:1px solid #F1F4F8;padding-top:18px">
+              <h3 style="margin:0 0 6px;font-size:14px;font-weight:800">Enquadramento da capa</h3>
+              <p style="margin:0 0 12px;font-size:12.5px;color:#5B6472">Arraste a imagem para posicionar e use o controle de zoom. A prévia abaixo é exatamente o corte usado no card do site.</p>
+              <div style="display:flex;gap:20px;flex-wrap:wrap;align-items:flex-start">
+                <div onPointerDown="{{frameDown}}" onPointerMove="{{frameMove}}" onPointerUp="{{frameUp}}" style="width:320px;max-width:100%;aspect-ratio:16/10;border-radius:12px;overflow:hidden;background:#E9EDF2;cursor:grab;touch-action:none;border:1px solid #D9DEE6">
+                  {{capaImg}}
+                </div>
+                <div style="flex:1;min-width:200px;display:flex;flex-direction:column;gap:10px">
+                  <label style="font-size:12px;font-weight:700;color:#5B6472">ZOOM
+                    <input type="range" min="1" max="2.5" step="0.05" value="{{frameZ}}" onChange="{{setFrameZ}}" style="width:100%;accent-color:#1560F0;margin-top:6px"></label>
+                  <div style="font-size:12px;color:#8A94A4;font-family:ui-monospace,monospace">posição {{frameXY}} · zoom {{frameZtx}}</div>
+                  <a onClick="{{frameReset}}" style="font-size:12.5px;font-weight:700;cursor:pointer">Redefinir enquadramento</a>
+                </div>
+              </div>
+            </div></sc-if>
+        </div>
+
+        <div style="display:flex;gap:10px;flex-wrap:wrap">
+          <button type="submit" style="background:#1560F0;color:#fff;border:none;font-size:15px;font-weight:700;padding:14px 26px;border-radius:10px;cursor:pointer" style-hover="background:#0E4FC7">Salvar veículo</button>
+          <a onClick="{{preVisualizar}}" style="border:1.5px solid #D9DEE6;color:#171B22;font-size:15px;font-weight:700;padding:13px 26px;border-radius:10px;cursor:pointer" style-hover="border-color:#1560F0;color:#1560F0">Visualizar anúncio</a>
+          <a onClick="{{goEstoque}}" style="color:#5B6472;font-size:14px;font-weight:600;padding:14px 10px;cursor:pointer">Cancelar</a>
+        </div>
+      </form>
+    </sc-if>
+
+    <!-- CONTATOS -->
+    <sc-if value="{{ehContatos}}" hint-placeholder-val="{{ false }}">
+      <h1 style="margin:0 0 18px;font-size:26px;font-weight:800;letter-spacing:-0.6px">Contatos recebidos</h1>
+      <sc-if value="{{semContatos}}" hint-placeholder-val="{{ false }}">
+        <div style="background:#fff;border:1px dashed #C9D2DE;border-radius:14px;padding:44px 24px;text-align:center;color:#5B6472;font-size:14.5px">Nenhum contato ainda. Os envios de formulário e cliques em “Tenho interesse” do site aparecem aqui.</div></sc-if>
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <sc-for list="{{contatos}}" as="c" hint-placeholder-count="3">
+          <div style="background:#fff;border:1px solid #E4E8EE;border-radius:14px;padding:16px 18px">
+            <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap">
+              <div style="flex:1;min-width:160px">
+                <div style="font-size:15px;font-weight:800">{{c.nome}}</div>
+                <div style="font-size:12.5px;color:#5B6472;margin-top:2px">{{c.origem}} · {{c.dataStr}}<sc-if value="{{c.temVeiculo}}" hint-placeholder-val="{{ false }}"> · {{c.veiculo}}</sc-if></div>
+              </div>
+              <select value="{{c.statusAt}}" onChange="{{c.mudarStatus}}" style="padding:9px 8px;border:1px solid #D9DEE6;border-radius:9px;font-size:12.5px;font-weight:700;background:#fff">
+                <option value="novo">Novo contato</option><option value="atendimento">Em atendimento</option><option value="negociacao">Negociação</option><option value="visita">Visita agendada</option><option value="venda">Venda concluída</option><option value="sem">Sem interesse</option></select>
+              <sc-if value="{{c.temWhats}}" hint-placeholder-val="{{ false }}">
+                <a href="{{c.waHref}}" target="_blank" style="background:#1DAA55;color:#fff;font-size:12.5px;font-weight:700;padding:10px 14px;border-radius:9px" style-hover="background:#178F47;color:#fff">Abrir WhatsApp</a></sc-if>
+              <a onClick="{{c.excluir}}" style="font-size:12.5px;font-weight:700;color:#B3261E;cursor:pointer;padding:8px">Excluir</a>
+            </div>
+            <sc-if value="{{c.temMsg}}" hint-placeholder-val="{{ false }}">
+              <p style="margin:10px 0 0;font-size:13px;color:#39414D;background:#F5F6F8;border-radius:9px;padding:10px 12px;white-space:pre-wrap;line-height:1.5">{{c.msg}}</p></sc-if>
+            <input value="{{c.obs}}" onChange="{{c.mudarObs}}" placeholder="Observações internas…" style="margin-top:10px;width:100%;box-sizing:border-box;padding:9px 12px;border:1px solid #E4E8EE;border-radius:9px;font-size:13px;background:#FAFBFC">
+          </div></sc-for>
+      </div>
+    </sc-if>
+
+    <!-- CONFIGURAÇÕES -->
+    <sc-if value="{{ehConfig}}" hint-placeholder-val="{{ false }}">
+      <h1 style="margin:0 0 18px;font-size:26px;font-weight:800;letter-spacing:-0.6px">Configurações do site</h1>
+      <form onSubmit="{{salvarConfig}}" style="background:#fff;border:1px solid #E4E8EE;border-radius:16px;padding:24px;display:flex;flex-direction:column;gap:14px;max-width:720px">
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px">
+          <label style="font-size:12px;font-weight:700;color:#5B6472;display:flex;flex-direction:column;gap:5px">NOME DA EMPRESA<input name="nome" defaultValue="{{cfg.nome}}" style="padding:11px 12px;border:1px solid #D9DEE6;border-radius:9px;font-size:14px"></label>
+          <label style="font-size:12px;font-weight:700;color:#5B6472;display:flex;flex-direction:column;gap:5px">WHATSAPP (só números, c/ DDI)<input name="whatsappNum" defaultValue="{{cfg.whatsappNum}}" style="padding:11px 12px;border:1px solid #D9DEE6;border-radius:9px;font-size:14px"></label>
+          <label style="font-size:12px;font-weight:700;color:#5B6472;display:flex;flex-direction:column;gap:5px">WHATSAPP (exibição)<input name="whatsappFmt" defaultValue="{{cfg.whatsappFmt}}" style="padding:11px 12px;border:1px solid #D9DEE6;border-radius:9px;font-size:14px"></label>
+          <label style="font-size:12px;font-weight:700;color:#5B6472;display:flex;flex-direction:column;gap:5px">INSTAGRAM<input name="instagram" defaultValue="{{cfg.instagram}}" style="padding:11px 12px;border:1px solid #D9DEE6;border-radius:9px;font-size:14px"></label>
+          <label style="font-size:12px;font-weight:700;color:#5B6472;display:flex;flex-direction:column;gap:5px">HORÁRIO<input name="horario" defaultValue="{{cfg.horario}}" style="padding:11px 12px;border:1px solid #D9DEE6;border-radius:9px;font-size:14px"></label>
+          <label style="font-size:12px;font-weight:700;color:#5B6472;display:flex;flex-direction:column;gap:5px">E-MAIL<input name="email" defaultValue="{{cfg.email}}" style="padding:11px 12px;border:1px solid #D9DEE6;border-radius:9px;font-size:14px"></label>
+        </div>
+        <label style="font-size:12px;font-weight:700;color:#5B6472;display:flex;flex-direction:column;gap:5px">ENDEREÇO<input name="endereco" defaultValue="{{cfg.endereco}}" style="padding:11px 12px;border:1px solid #D9DEE6;border-radius:9px;font-size:14px"></label>
+        <label style="font-size:12px;font-weight:700;color:#5B6472;display:flex;flex-direction:column;gap:5px">TÍTULO DO BANNER<input name="heroTitulo" defaultValue="{{cfg.heroTitulo}}" style="padding:11px 12px;border:1px solid #D9DEE6;border-radius:9px;font-size:14px"></label>
+        <label style="font-size:12px;font-weight:700;color:#5B6472;display:flex;flex-direction:column;gap:5px">SUBTÍTULO DO BANNER<textarea name="heroSub" rows="2" defaultValue="{{cfg.heroSub}}" style="padding:11px 12px;border:1px solid #D9DEE6;border-radius:9px;font-size:14px;resize:vertical"></textarea></label>
+        <label style="font-size:12px;font-weight:700;color:#5B6472;display:flex;flex-direction:column;gap:5px">TEXTO INSTITUCIONAL (SOBRE)<textarea name="sobre" rows="3" defaultValue="{{cfg.sobre}}" style="padding:11px 12px;border:1px solid #D9DEE6;border-radius:9px;font-size:14px;resize:vertical"></textarea></label>
+        <label style="display:flex;align-items:center;gap:8px;font-size:13.5px;font-weight:600;cursor:pointer"><input type="checkbox" name="mostrarVendidos" defaultChecked="{{cfg.mostrarVendidos}}" style="width:18px;height:18px;accent-color:#1560F0">Exibir veículos vendidos no site (com selo “Vendido”)</label>
+        <div style="border-top:1px solid #F1F4F8;padding-top:14px;display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px">
+          <label style="font-size:12px;font-weight:700;color:#5B6472;display:flex;flex-direction:column;gap:5px">E-MAIL DE ACESSO AO PAINEL<input name="adminEmail" type="email" defaultValue="{{cfg.adminEmail}}" style="padding:11px 12px;border:1px solid #D9DEE6;border-radius:9px;font-size:14px"></label>
+          <label style="font-size:12px;font-weight:700;color:#5B6472;display:flex;flex-direction:column;gap:5px">NOVA SENHA (opcional)<input name="adminSenha" type="password" placeholder="Deixe em branco p/ manter" style="padding:11px 12px;border:1px solid #D9DEE6;border-radius:9px;font-size:14px"></label>
+        </div>
+        <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap">
+          <button type="submit" style="background:#1560F0;color:#fff;border:none;font-size:15px;font-weight:700;padding:14px 26px;border-radius:10px;cursor:pointer;align-self:flex-start" style-hover="background:#0E4FC7">Salvar configurações</button>
+          <a onClick="{{restaurarDados}}" style="font-size:13px;font-weight:600;color:#B3261E;cursor:pointer">Restaurar dados de demonstração</a>
+        </div>
+      </form>
+    </sc-if>
+  </main>
+</div>
+</sc-if>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = {tela:'dash', editId:null, fotos:[], capa:0, frame:{x:50,y:50,z:1}, enviando:false, progresso:0, uploadOk:false,
+           qBusca:'', qStatus:'', qOrdem:'data', aviso:'', erroLogin:false, sessao:null, drag:-1};
+
+  componentDidMount(){
+    window.RVAPI.init().then(m=>{
+      this.D=m; this.db=m.__db;
+      this.setState({sessao:m.getSessao()});
+    });
+  }
+
+  avisar(t){this.setState({aviso:t});clearTimeout(this._at);this._at=setTimeout(()=>this.setState({aviso:''}),3200);}
+  salvar(){this.D.saveDB(this.db);}
+
+  abrirForm(v){
+    this.setState({tela:'form',editId:v?v.id:null,
+      fotos:v?(v.fotos||[]).slice():[],capa:v?(v.capa||0):0,
+      frame:v&&v.frame?Object.assign({},v.frame):{x:50,y:50,z:1},uploadOk:false,enviando:false});
+    window.scrollTo({top:0});
+  }
+
+  lerForm(form){
+    const f=new FormData(form),d={};f.forEach((v,k)=>d[k]=v);
+    ['anoFab','anoMod','preco','km','portas','entradaSugerida'].forEach(k=>d[k]=Number(d[k]||0));
+    ['leilao','sinistro','aceitaTroca','financia'].forEach(k=>d[k]=f.get(k)==='on');
+    d.opcionais=(d.opcionais||'').split('\n').map(s=>s.trim()).filter(Boolean);
+    return d;
+  }
+
+  renderVals(){
+    if(!this.D)return {semSessao:false,comSessao:false,cfg:{},stats:[],listaAdm:[],contatos:[],fotosForm:[],maisVistos:[],ultimosContatos:[],fv:{}};
+    const D=this.D, db=this.db, st=this.state, cfg=db.config;
+    const sess=st.sessao;
+    if(!sess){
+      return {semSessao:true,comSessao:false,erroLogin:st.erroLogin,cfg,stats:[],listaAdm:[],contatos:[],fotosForm:[],maisVistos:[],ultimosContatos:[],fv:{},
+        fazerLogin:(e)=>{e.preventDefault();const f=new FormData(e.target);
+          D.login(f.get('email').trim(),f.get('senha'))
+            .then(s=>D.init().then(()=>{this.db=D.__db;this.setState({sessao:s,erroLogin:false});}))
+            .catch(()=>this.setState({erroLogin:true}));},
+        recuperarSenha:()=>alert('Enviamos um link de redefinição para '+cfg.adminEmail+' (simulado no protótipo).')};
+    }
+
+    const vs=db.veiculos;
+    const nav=(t)=>({});
+    const corNav=(t)=>st.tela===t?'#fff':'#8A94A4';
+    const bgNav=(t)=>st.tela===t?'rgba(21,96,240,.35)':'transparent';
+
+    // estoque admin
+    let lista=vs.slice();
+    const q=st.qBusca.trim().toLowerCase();
+    if(q)lista=lista.filter(v=>(v.marca+' '+v.modelo+' '+v.versao).toLowerCase().includes(q));
+    if(st.qStatus)lista=lista.filter(v=>v.status===st.qStatus);
+    lista.sort((a,b)=>st.qOrdem==='precoAsc'?a.preco-b.preco:st.qOrdem==='precoDesc'?b.preco-a.preco:st.qOrdem==='ano'?b.anoMod-a.anoMod:st.qOrdem==='views'?(b.views||0)-(a.views||0):b.criadoEm-a.criadoEm);
+    const listaAdm=lista.map(v=>{
+      const foto=v.fotos&&v.fotos.length?v.fotos[Math.min(v.capa||0,v.fotos.length-1)]:null;
+      const fr=v.frame||{x:50,y:50,z:1};
+      return {id:v.id,nome:D.tituloDe(v)+' '+v.versao,sub:v.anoFab+'/'+v.anoMod+' · '+D.fmtKm(v.km),views:v.views||0,
+        precoStr:D.fmtPreco(v.preco),status:v.status,statusCor:D.STATUS_COR[v.status],
+        temFoto:!!foto,
+        capaImg:foto?React.createElement('img',{src:foto,alt:'',style:{width:'100%',height:'100%',objectFit:'cover',objectPosition:fr.x+'% '+fr.y+'%',display:'block'}}):null,
+        verHref:'index.html#/v/'+D.slugDe(v),
+        mudarStatus:(e)=>{v.status=e.target.value;this.salvar();this.avisar('Status atualizado: '+D.STATUS_LABEL[v.status]);this.forceUpdate();},
+        editar:()=>this.abrirForm(v),
+        duplicar:()=>{const c=JSON.parse(JSON.stringify(v));c.id=Date.now();c.criadoEm=Date.now();c.views=0;c.status='oculto';c.versao=v.versao+' (cópia)';db.veiculos.unshift(c);this.salvar();this.avisar('Cadastro duplicado (criado como Oculto).');this.forceUpdate();},
+        excluir:()=>{if(confirm('Excluir '+D.tituloDe(v)+'? Esta ação não pode ser desfeita.')){db.veiculos=db.veiculos.filter(x=>x.id!==v.id);this.salvar();this.avisar('Veículo excluído.');this.forceUpdate();}}};
+    });
+
+    // form
+    const ve=st.editId?vs.find(v=>v.id===st.editId):null;
+    const fv=ve?Object.assign({},ve,{opcionaisTxt:(ve.opcionais||[]).join('\n')}):{status:'disponivel',aceitaTroca:true,financia:true,leilao:false,sinistro:false,portas:4,combustivel:'Flex',cambio:'Automático',carroceria:'Hatch',garantia:'Garantia de 90 dias para motor e câmbio',documentacao:'Documentação em dia, sem multas ou restrições',opcionaisTxt:''};
+    const fotosForm=st.fotos.map((src,i)=>({src,ehCapa:i===st.capa,naoCapa:i!==st.capa,borda:i===st.capa?'#1560F0':'#E4E8EE',
+      img:React.createElement('img',{src,alt:'',style:{width:'100%',height:96,objectFit:'cover',display:'block'}}),
+      dragStart:(e)=>{this.setState({drag:i});e.dataTransfer.effectAllowed='move';},
+      dragOver:(e)=>e.preventDefault(),
+      drop:(e)=>{e.preventDefault();const de=st.drag;if(de<0||de===i)return;
+        const arr=st.fotos.slice();const[mv]=arr.splice(de,1);arr.splice(i,0,mv);
+        let capa=st.capa;if(st.capa===de)capa=i;else if(de<st.capa&&i>=st.capa)capa--;else if(de>st.capa&&i<=st.capa)capa++;
+        this.setState({fotos:arr,capa,drag:-1});},
+      definirCapa:()=>this.setState({capa:i,frame:{x:50,y:50,z:1}}),
+      excluir:()=>{const arr=st.fotos.slice();arr.splice(i,1);this.setState({fotos:arr,capa:Math.max(0,Math.min(st.capa>=i?st.capa-1:st.capa,arr.length-1))});},
+      trocar:(e)=>{const file=e.target.files[0];if(!file)return;D.comprimirImagem(file,(url)=>{const arr=st.fotos.slice();arr[i]=url;this.setState({fotos:arr});});}
+    }));
+    const capaSrc=st.fotos.length?st.fotos[Math.min(st.capa,st.fotos.length-1)]:'';
+
+    // contatos
+    const fmtData=(t)=>new Date(t).toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'})+' '+new Date(t).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+    const contatos=db.contatos.map(c=>({
+      id:c.id,nome:c.nome||'—',origem:c.origem,dataStr:fmtData(c.data),veiculo:c.veiculo,temVeiculo:!!c.veiculo,
+      statusAt:c.statusAt,msg:c.msg,temMsg:!!c.msg,obs:c.obs||'',
+      temWhats:!!(c.whats&&c.whats.replace(/\D/g,'').length>=8),
+      waHref:'https://wa.me/55'+(c.whats||'').replace(/\D/g,''),
+      mudarStatus:(e)=>{c.statusAt=e.target.value;this.salvar();this.forceUpdate();},
+      mudarObs:(e)=>{c.obs=e.target.value;this.salvar();this.forceUpdate();},
+      excluir:()=>{db.contatos=db.contatos.filter(x=>x.id!==c.id);this.salvar();this.forceUpdate();}
+    }));
+    const nNovos=db.contatos.filter(c=>c.statusAt==='novo').length;
+
+    const conta=(s)=>vs.filter(v=>v.status===s).length;
+    return {
+      semSessao:false, comSessao:true, cfg, aviso:st.aviso,
+      ehDash:st.tela==='dash', ehEstoque:st.tela==='estoque', ehForm:st.tela==='form', ehContatos:st.tela==='contatos', ehConfig:st.tela==='config',
+      navDashCor:corNav('dash'),navDashBg:bgNav('dash'),navEstCor:corNav('estoque'),navEstBg:bgNav('estoque'),
+      navFormCor:corNav('form'),navFormBg:bgNav('form'),navConCor:corNav('contatos'),navConBg:bgNav('contatos'),
+      navCfgCor:corNav('config'),navCfgBg:bgNav('config'),
+      goDash:()=>this.setState({tela:'dash'}), goEstoque:()=>this.setState({tela:'estoque'}),
+      goNovo:()=>this.abrirForm(null), goContatos:()=>this.setState({tela:'contatos'}), goConfig:()=>this.setState({tela:'config'}),
+      sair:()=>{this.D.setSessao(null);this.setState({sessao:null});},
+      temNovos:nNovos>0, nNovos,
+      stats:[{n:vs.length,t:'Veículos cadastrados',cor:'#141922'},{n:conta('disponivel'),t:'Disponíveis',cor:'#1B9E4B'},{n:conta('reservado'),t:'Reservados',cor:'#C77B00'},{n:conta('vendido'),t:'Vendidos',cor:'#B3261E'},{n:conta('oculto'),t:'Ocultos',cor:'#666'},{n:db.contatos.length,t:'Contatos recebidos',cor:'#1560F0'},{n:db.acessos||0,t:'Acessos ao site',cor:'#141922'}],
+      maisVistos:vs.slice().sort((a,b)=>(b.views||0)-(a.views||0)).slice(0,5).map(v=>({nome:D.tituloDe(v)+' '+v.anoMod,views:v.views||0})),
+      ultimosContatos:db.contatos.slice(0,5).map(c=>({nome:c.nome||'—',origem:c.origem,dataStr:fmtData(c.data)})),
+      semContatos:db.contatos.length===0,
+      listaAdm, qBusca:st.qBusca,qStatus:st.qStatus,qOrdem:st.qOrdem,
+      setQBusca:(e)=>this.setState({qBusca:e.target.value}),
+      setQStatus:(e)=>this.setState({qStatus:e.target.value}),
+      setQOrdem:(e)=>this.setState({qOrdem:e.target.value}),
+      // formulário
+      tituloForm:ve?'Editar veículo':'Cadastrar veículo', fv,
+      fotosForm, temFotosForm:st.fotos.length>0,
+      capaImg:capaSrc?React.createElement('img',{src:capaSrc,alt:'prévia da capa',draggable:false,style:{width:'100%',height:'100%',objectFit:'cover',objectPosition:st.frame.x+'% '+st.frame.y+'%',transform:'scale('+st.frame.z+')',display:'block',pointerEvents:'none'}}):null,
+      enviando:st.enviando, progresso:st.progresso, uploadOk:st.uploadOk,
+      framePos:st.frame.x+'% '+st.frame.y+'%', frameTr:'scale('+st.frame.z+')', frameZ:st.frame.z,
+      frameXY:Math.round(st.frame.x)+'% / '+Math.round(st.frame.y)+'%', frameZtx:st.frame.z.toFixed(2)+'x',
+      setFrameZ:(e)=>this.setState({frame:Object.assign({},st.frame,{z:Number(e.target.value)})}),
+      frameReset:()=>this.setState({frame:{x:50,y:50,z:1}}),
+      frameDown:(e)=>{this._fd={x:e.clientX,y:e.clientY,fx:st.frame.x,fy:st.frame.y};e.currentTarget.setPointerCapture(e.pointerId);},
+      frameMove:(e)=>{if(!this._fd)return;const r=e.currentTarget.getBoundingClientRect();
+        const nx=Math.max(0,Math.min(100,this._fd.fx-(e.clientX-this._fd.x)/r.width*100));
+        const ny=Math.max(0,Math.min(100,this._fd.fy-(e.clientY-this._fd.y)/r.height*100));
+        this.setState({frame:Object.assign({},this.state.frame,{x:nx,y:ny})});},
+      frameUp:()=>{this._fd=null;},
+      uploadFotos:(e)=>{
+        const files=[...e.target.files];if(!files.length)return;
+        e.target.value='';
+        this.setState({enviando:true,progresso:0,uploadOk:false});
+        const novas=[];let done=0;
+        files.forEach((file,idx)=>{
+          D.comprimirImagem(file,(url)=>{
+            novas[idx]=url;done++;
+            this.setState({progresso:Math.round(done/files.length*100)});
+            if(done===files.length){
+              setTimeout(()=>this.setState({fotos:this.state.fotos.concat(novas.filter(Boolean)),enviando:false,uploadOk:true}),250);
+            }
+          });
+        });
+      },
+      salvarVeiculo:(e)=>{
+        e.preventDefault();
+        const d=this.lerForm(e.target);
+        d.fotos=st.fotos;d.capa=Math.min(st.capa,Math.max(0,st.fotos.length-1));d.frame=st.frame;
+        if(ve){Object.assign(ve,d);this.avisar('Veículo atualizado — alterações já visíveis no site.');}
+        else{db.veiculos.unshift(Object.assign({id:Date.now(),criadoEm:Date.now(),views:0},d));this.avisar('Veículo cadastrado e publicado no site.');}
+        this.salvar();this.setState({tela:'estoque'});window.scrollTo({top:0});
+      },
+      preVisualizar:()=>{
+        const form=document.querySelector('form');
+        if(!form.reportValidity())return;
+        const d=this.lerForm(form);
+        d.fotos=st.fotos;d.capa=st.capa;d.frame=st.frame;d.id=ve?ve.id:Date.now();d.criadoEm=Date.now();d.views=ve?ve.views:0;
+        if(ve)Object.assign(ve,d);else{db.veiculos.unshift(d);this.setState({editId:d.id});}
+        this.salvar();
+        window.open('index.html#/v/'+D.slugDe(d),'_blank');
+        this.avisar('Anúncio salvo e aberto em nova aba.');
+      },
+      salvarConfig:(e)=>{
+        e.preventDefault();
+        const f=new FormData(e.target);
+        f.forEach((v,k)=>{if(k==='adminSenha'){if(v)cfg.adminSenha=v;}else if(k!=='mostrarVendidos')cfg[k]=v;});
+        cfg.mostrarVendidos=f.get('mostrarVendidos')==='on';
+        this.salvar();this.avisar('Configurações salvas — o site já usa os novos dados.');this.forceUpdate();
+      },
+      restaurarDados:()=>{if(confirm('Substituir todos os dados pelos de demonstração?')){D.resetDB().then(db=>{this.db=db;this.avisar('Dados de demonstração restaurados.');this.forceUpdate();});}}
+    };
+  }
+}
+</script>
+</body>
+</html>
