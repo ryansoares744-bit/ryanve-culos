@@ -45,6 +45,7 @@ window.addEventListener('load',function(){setTimeout(function(){
 <script src="dados-api.js"></script>
 <style>
 html{scroll-behavior:smooth}
+@media (max-width:760px){#wa-header{display:none !important}}
 body{margin:0;font-family:'Archivo',system-ui,sans-serif;background:#F5F6F8;color:#171B22;-webkit-font-smoothing:antialiased}
 a{color:#1560F0;text-decoration:none}a:hover{color:#0B3EAB}
 input,select,textarea,button{font-family:'Archivo',system-ui,sans-serif}
@@ -63,7 +64,7 @@ input,select,textarea,button{font-family:'Archivo',system-ui,sans-serif}
       <a onClick="{{goEstoque}}" style="color:#C9D2DE;font-size:14px;font-weight:600;padding:12px 12px;cursor:pointer;border-radius:8px;white-space:nowrap" style-hover="color:#fff;background:rgba(255,255,255,.06)">Estoque</a>
       <a onClick="{{goSobre}}" style="color:#C9D2DE;font-size:14px;font-weight:600;padding:12px 12px;cursor:pointer;border-radius:8px;white-space:nowrap" style-hover="color:#fff;background:rgba(255,255,255,.06)">Sobre nós</a>
       <a onClick="{{goLocal}}" style="color:#C9D2DE;font-size:14px;font-weight:600;padding:12px 12px;cursor:pointer;border-radius:8px;white-space:nowrap" style-hover="color:#fff;background:rgba(255,255,255,.06)">Localização</a>
-      <a href="{{waGeral}}" target="_blank" style="display:inline-flex;align-items:center;gap:8px;background:#1DAA55;color:#fff;font-size:14px;font-weight:700;padding:11px 18px;border-radius:10px;margin-left:8px;white-space:nowrap" style-hover="background:#178F47;color:#fff">
+      <a href="{{waGeral}}" target="_blank" id="wa-header" style="display:inline-flex;align-items:center;gap:8px;background:#1DAA55;color:#fff;font-size:14px;font-weight:700;padding:11px 18px;border-radius:10px;margin-left:8px;white-space:nowrap" style-hover="background:#178F47;color:#fff">
         <span style="width:8px;height:8px;border-radius:50%;background:#fff;display:inline-block"></span>Falar no WhatsApp</a>
     </nav>
   </div>
