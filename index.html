@@ -45,7 +45,9 @@ window.addEventListener('load',function(){setTimeout(function(){
 <script src="dados-api.js"></script>
 <style>
 html{scroll-behavior:smooth}
-@media (max-width:760px){#wa-header{display:none !important}}
+@media (max-width:760px){#wa-header{display:none !important}
+.rv-hero-desk{display:none !important}.rv-hero-mob{display:block !important}}
+.rv-hero-mob{display:none}
 body{margin:0;font-family:'Archivo',system-ui,sans-serif;background:#F5F6F8;color:#171B22;-webkit-font-smoothing:antialiased}
 a{color:#1560F0;text-decoration:none}a:hover{color:#0B3EAB}
 input,select,textarea,button{font-family:'Archivo',system-ui,sans-serif}
@@ -90,8 +92,16 @@ input,select,textarea,button{font-family:'Archivo',system-ui,sans-serif}
           <div><div style="font-size:22px;font-weight:800">Troca</div><div style="font-size:12.5px;color:#8A94A4;font-weight:500">avaliamos seu usado</div></div>
         </div>
       </div>
-      <div style="min-height:320px;border-radius:16px;overflow:hidden;border:1px solid rgba(255,255,255,.1);animation:rvFade .6s .15s ease both">
+      <div class="rv-hero-desk" style="min-height:320px;border-radius:16px;overflow:hidden;border:1px solid rgba(255,255,255,.1);animation:rvFade .6s .15s ease both">
         <img src="uploads/hero.png" alt="Veículo em destaque" style="width:100%;height:100%;min-height:320px;object-fit:cover;display:block">
+      </div>
+      <div class="rv-hero-mob" style="animation:rvFade .6s .15s ease both">
+        <sc-if value="{{temCarousel}}" hint-placeholder-val="{{ false }}">{{heroCarousel}}</sc-if>
+        <sc-if value="{{semCarousel}}" hint-placeholder-val="{{ true }}">
+          <div style="min-height:280px;border-radius:16px;overflow:hidden;border:1px solid rgba(255,255,255,.1)">
+            <img src="uploads/hero.png" alt="Veículo em destaque" style="width:100%;height:100%;min-height:280px;object-fit:cover;display:block">
+          </div>
+        </sc-if>
       </div>
     </div>
   </section>
@@ -403,7 +413,7 @@ input,select,textarea,button{font-family:'Archivo',system-ui,sans-serif}
 </x-dc>
 <script type="text/x-dc" data-dc-script data-props="{&quot;mostrarVendidos&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Estoque&quot;},&quot;ordemEstoque&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;recentes&quot;,&quot;menorPreco&quot;,&quot;maiorPreco&quot;],&quot;default&quot;:&quot;recentes&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Estoque&quot;}}">
 class Component extends DCLogic {
-  state = {slug:null, filtros:{busca:'',marca:'',preco:'',ano:'',cambio:'',comb:'',km:'',soDisp:false}, lb:-1, foto:0, visita:false};
+  state = {slug:null, filtros:{busca:'',marca:'',preco:'',ano:'',cambio:'',comb:'',km:'',soDisp:false}, lb:-1, foto:0, visita:false, heroIdx:0};
 
   componentDidMount(){
     window.RVAPI.init().then(m=>{
@@ -415,8 +425,12 @@ class Component extends DCLogic {
     window.addEventListener('hashchange',this._onHash);
     this._onKey=(e)=>{if(e.key==='Escape')this.setState({lb:-1,visita:false});};
     window.addEventListener('keydown',this._onKey);
+    this._heroTimer=setInterval(()=>{
+      const n=this._heroCount||0;
+      if(n>1&&!this.state.slug&&!this._heroHover)this.setState(s=>({heroIdx:(s.heroIdx+1)%n}));
+    },4000);
   }
-  componentWillUnmount(){window.removeEventListener('hashchange',this._onHash);window.removeEventListener('keydown',this._onKey);}
+  componentWillUnmount(){window.removeEventListener('hashchange',this._onHash);window.removeEventListener('keydown',this._onKey);clearInterval(this._heroTimer);}
 
   lerRota(update){
     const h=location.hash||'';
@@ -521,10 +535,36 @@ class Component extends DCLogic {
     }
     const nomes=pub.filter(v=>v.status==='disponivel').map(v=>D.tituloDe(v)+' '+v.versao+' '+v.anoMod);
 
+    // Carrossel do banner (celular): fotos dos veículos disponíveis
+    const slidesCar=pub.filter(v=>v.status==='disponivel'&&v.fotos&&v.fotos.length).map(v=>{
+      const fr=v.frame||{x:50,y:50,z:1};
+      return {src:v.fotos[Math.min(v.capa||0,v.fotos.length-1)], fr, titulo:D.tituloDe(v)+' '+v.anoMod, preco:D.fmtPreco(v.preco), href:'#/v/'+D.slugDe(v)};
+    });
+    this._heroCount=slidesCar.length;
+    const hIdx=slidesCar.length?this.state.heroIdx%slidesCar.length:0;
+    const cur=slidesCar[hIdx];
+    const heroCarousel=slidesCar.length?React.createElement('div',{
+      onMouseEnter:()=>{this._heroHover=true;}, onMouseLeave:()=>{this._heroHover=false;},
+      style:{position:'relative',width:'100%',aspectRatio:'4/3',borderRadius:16,overflow:'hidden',border:'1px solid rgba(255,255,255,.1)',background:'#0C1017'}
+    },[
+      React.createElement('a',{key:'img',href:cur.href,style:{display:'block',width:'100%',height:'100%'}},
+        React.createElement('img',{src:cur.src,alt:cur.titulo,style:{width:'100%',height:'100%',objectFit:'cover',objectPosition:cur.fr.x+'% '+cur.fr.y+'%',transform:'scale('+(cur.fr.z||1)+')',display:'block'}})),
+      React.createElement('div',{key:'grad',style:{position:'absolute',inset:0,pointerEvents:'none',background:'linear-gradient(to top,rgba(10,14,20,.82) 0%,rgba(10,14,20,.15) 42%,rgba(10,14,20,.35) 100%)'}}),
+      React.createElement('div',{key:'info',style:{position:'absolute',left:16,right:16,bottom:52,color:'#fff',pointerEvents:'none'}},[
+        React.createElement('div',{key:'t',style:{fontSize:16,fontWeight:800,letterSpacing:'-.3px',textShadow:'0 2px 8px rgba(0,0,0,.5)'}},cur.titulo),
+        React.createElement('div',{key:'p',style:{fontSize:15,fontWeight:700,color:'#7FA9FF',marginTop:2,textShadow:'0 2px 8px rgba(0,0,0,.5)'}},cur.preco)
+      ]),
+      React.createElement('a',{key:'ver',onClick:()=>this.irSecao('rv-estoque'),style:{position:'absolute',left:16,bottom:16,background:'#1560F0',color:'#fff',fontSize:14,fontWeight:700,padding:'11px 20px',borderRadius:10,cursor:'pointer'}},'Ver estoque'),
+      slidesCar.length>1?React.createElement('button',{key:'prev','aria-label':'Anterior',onClick:()=>this.setState(s=>({heroIdx:(s.heroIdx-1+slidesCar.length)%slidesCar.length})),style:{position:'absolute',left:10,top:'44%',width:40,height:40,borderRadius:'50%',border:'none',background:'rgba(20,25,34,.55)',backdropFilter:'blur(6px)',color:'#fff',fontSize:20,lineHeight:'40px',cursor:'pointer'}},'\u2039'):null,
+      slidesCar.length>1?React.createElement('button',{key:'next','aria-label':'Próximo',onClick:()=>this.setState(s=>({heroIdx:(s.heroIdx+1)%slidesCar.length})),style:{position:'absolute',right:10,top:'44%',width:40,height:40,borderRadius:'50%',border:'none',background:'rgba(20,25,34,.55)',backdropFilter:'blur(6px)',color:'#fff',fontSize:20,lineHeight:'40px',cursor:'pointer'}},'\u203a'):null,
+      slidesCar.length>1?React.createElement('div',{key:'dots',style:{position:'absolute',right:16,bottom:22,display:'flex',gap:7}},slidesCar.map((_,i)=>React.createElement('span',{key:i,onClick:()=>this.setState({heroIdx:i}),style:{width:i===hIdx?22:8,height:8,borderRadius:20,background:i===hIdx?'#1560F0':'rgba(255,255,255,.5)',cursor:'pointer',transition:'width .3s'}}))):null
+    ]):null;
+
     return {
       cfg, isHome:!vd, isDetalhe:!!vd, det,
       waGeral:D.waLink(cfg,'Olá! Vim pelo site da Ryan Veículos e gostaria de mais informações.'),
       nDisponiveis:pub.filter(v=>v.status==='disponivel').length,
+      heroCarousel, temCarousel:slidesCar.length>0, semCarousel:slidesCar.length===0,
       lista:vms, nResultados:vms.length, semResultados:vms.length===0,
       marcas, anos, nomesVeiculos:nomes,
       fBusca:f.busca,fMarca:f.marca,fPreco:f.preco,fAno:f.ano,fCambio:f.cambio,fComb:f.comb,fKm:f.km,fSoDisp:f.soDisp,
