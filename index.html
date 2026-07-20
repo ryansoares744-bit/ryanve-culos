@@ -12,7 +12,7 @@
 <script>
 (function(){var errs=[];
 window.addEventListener('error',function(e){
-  if(e&&e.target&&(e.target.src||e.target.href)){errs.push('FALHOU CARREGAR: '+(e.target.src||e.target.href));}
+  if(e&&e.target&&(e.target.src||e.target.href)){var u=e.target.src||e.target.href;if(!/googletagmanager|google-analytics|gtag|doubleclick/.test(u))errs.push('FALHOU CARREGAR: '+u);}
   else if(e&&e.message){errs.push(e.message+' @ '+String(e.filename||'').split('/').pop()+':'+(e.lineno||''));}
 },true);
 window.addEventListener('load',function(){setTimeout(function(){
@@ -21,7 +21,7 @@ window.addEventListener('load',function(){setTimeout(function(){
   if(!window.React)probs.push('React NAO carregou');
   if(typeof window.RVDADOS==='undefined')probs.push('dados-global.js NAO carregou');
   if(typeof window.RVAPI==='undefined')probs.push('dados-api.js NAO carregou');
-  if(raw||probs.length||errs.length){
+  if(raw||probs.length){
     var d=document.createElement('div');
     d.style.cssText='position:fixed;left:10px;bottom:10px;right:10px;max-height:45vh;overflow:auto;z-index:2147483647;background:#7f1d1d;color:#fff;font:12px/1.6 monospace;padding:14px;border-radius:10px;white-space:pre-wrap';
     d.textContent='DIAGNOSTICO RYAN VEICULOS — tire um PRINT desta caixa e envie\n'
